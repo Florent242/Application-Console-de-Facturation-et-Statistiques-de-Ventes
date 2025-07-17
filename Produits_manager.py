@@ -1,81 +1,97 @@
+
 import pandas as pd
-import os 
+import os
+from data_manager import (
+    lire_fichier_excel,
+    DATA_PATH,
+    afficher_produits,
+    Fore,
+    Style
+)
 
-# Importe les fonctions de lecture et les chemins de fichiers du Membre 1
-from data_manager import get_produits, CHEMIN_PRODUITS, afficher_produits
+def valider_code_produit(code):
+    """Valide le format du code produit (6 caractères alphanumériques)"""
+    return len(code) == 6 and code.isalnum()
 
-def ajouter_produit():
-    print("\n- Ajouter un nouveau produit -")
+def code_produit_existe(code, df_produits):
+    """Vérifie si un code produit existe déjà"""
+    return code in df_produits['code_produit'].values
 
-    # Valider le code produit (6 caractères)
-    def Valider_code_produit(code, produits_df):
-    
-        if len(code) != 6 :
-            print("Le code produit doit contenir exactement 6 caractères alphanumériques.")
-            return False
-        if code in produits_df['code_produit'].values:
-            print("Le code produit existe déjà.")
-            return False
-        return True
-
-    # Saisir et valider le code produit
-    produits_df = get_produits()
-    if produits_df is None:
-        produits_df = pd.DataFrame(columns=['code_produit', 'libelle', 'prix_unitaire'])
-
-    while True:
-        code = input("Entrez le code produit (6 caractères alphanumériques) : ").strip()
-        if Valider_code_produit(code, produits_df):
-            break
-
-    # Saisir le libellé du produit
-    libelle = input("Entrez le Nom du produit : ").strip()
-    if not libelle:
-        print("Le nom du produit ne peut pas être vide.")
-        return
-
-    # Saisie et validation du prix unitaire
+def saisir_prix_unitaire():
+    """Gère la saisie sécurisée du prix"""
     while True:
         try:
-            prix_unitaire_str = input("Entrez le prix unitaire du produit : ").strip()
-            prix_unitaire = float(prix_unitaire_str)
-            if prix_unitaire <= 0:
-                print("Erreur : Le prix unitaire doit être un nombre positif.")
+            prix = float(input(Fore.CYAN + "Prix unitaire[{}FCFA]: " + Style.RESET_ALL))
+            if prix <= 0:
+                print(Fore.RED + "Le prix doit être positif")
             else:
-                break
+                return round(prix, 2)
         except ValueError:
-            print("Erreur : Veuillez entrer un nombre valide pour le prix.")
+            print(Fore.RED + "Veuillez entrer un nombre valide")
 
-    # Ajout du produit
-    nouveau_produit = {
+def ajouter_produit():
+    """Fonction principale pour ajouter un nouveau produit (intégrée avec Ange)"""
+    print(Fore.YELLOW + "\n=== AJOUT D'UN NOUVEAU PRODUIT ===")
+    
+    # Chargement via la fonction du Membre 1
+    df_produits = lire_fichier_excel('Produits.xlsx')
+    if df_produits is None:
+        print(Fore.RED + "ERREUR : Impossible de charger les produits")
+        return
+
+    # Validation du code produit
+    while True:
+        code = input(Fore.CYAN + "Code produit (6 caractères alphanum.) : " + Style.RESET_ALL).strip().upper()
+        if not valider_code_produit(code):
+            print(Fore.RED + "Format invalide : code de 6 caractères (chiffres/lettres)")
+        elif code_produit_existe(code, df_produits):
+            print(Fore.RED + "ERREUR : Ce code existe déjà")
+        else:
+            break
+
+    # Saisie des autres informations
+    libelle = input(Fore.CYAN + "Libellé du produit : " + Style.RESET_ALL).strip()
+    prix = saisir_prix_unitaire()
+
+    # Création du nouveau produit
+    nouveau_produit = pd.DataFrame([{
         'code_produit': code,
         'libelle': libelle,
-        'prix_unitaire': prix_unitaire
-    }
+        'prix_unitaire': prix
+    }])
 
-    # Ajouter le nouveau produit au DataFrame
-    produits_df = produits_df.append(nouveau_produit, ignore_index=True)
-
-    # Sauvegarder dans le fichier Excel
+    # Fusion et sauvegarde
     try:
-        produits_df.to_excel('Produits.xlsx', index=False)
-        print("Produit ajouté avec succès.")
+        df_final = pd.concat([df_produits, nouveau_produit], ignore_index=True)
+        df_final.to_excel(os.path.join(DATA_PATH, 'Produits.xlsx'), index=False)
+        
+        print(Fore.GREEN + f"\nSUCCÈS : Produit '{libelle}' ajouté (Code: {code})")
+        afficher_produits()  # Utilisation de la fonction du Membre 1
+        
     except Exception as e:
-        print(f"Erreur lors de la sauvegarde du produit : {e}")
+        print(Fore.RED + f"\nERREUR lors de l'enregistrement : {str(e)}")
 
-    # Afficher les produits mis à jour
-    afficher_produits(produits_df)
+def menu_gestion_produits():
+    """Menu spécifique pour le Membre 3"""
+    while True:
+        print(Fore.YELLOW + "\n=== GESTION DES PRODUITS ===")
+        print("1. Ajouter un produit")
+        print("2. Afficher les produits")
+        print(Fore.RED + "0. Retour" + Style.RESET_ALL)
+        
+        choix = input(Fore.BLUE + "Votre choix : " + Style.RESET_ALL)
+        
+        if choix == '1':
+            ajouter_produit()
+        elif choix == '2':
+            afficher_produits()
+        elif choix == '0':
+            break
+        else:
+            print(Fore.RED + "Option invalide")
 
-    #Get produits par code
-
-def get_produit_par_code(code_produit, produits_df):
-    code = code_produit.strip().upper()
-
-    # Recherche du produit dans le DataFrame
-    produit = produits_df[produits_df["code_produit"] == code]
-
-    if not produit.empty:
-        return produit.iloc[0]  
-    else:
-        return None
-
+if __name__ == "__main__":
+    # Test 
+    print(Fore.BLUE + "\n=== TEST DU MODULE PRODUCT_MANAGER ===")
+    print(f"Chemin des données : {DATA_PATH}")
+    menu_gestion_produits()

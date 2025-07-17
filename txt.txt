@@ -1,0 +1,75 @@
+def ajouter_produit():
+    print("\n- Ajouter un nouveau produit -")
+
+    # Valider le code produit (6 caractères)
+    def Valider_code_produit(code, produits_df):
+    
+        if len(code) != 6 :
+            print("Le code produit doit contenir exactement 6 caractères alphanumériques.")
+            return False
+        if code in produits_df['code_produit'].values:
+            print("Le code produit existe déjà.")
+            return False
+        return True
+
+    # Saisir et valider le code produit
+    produits_df = get_produits()
+    if produits_df is None:
+        produits_df = pd.DataFrame(columns=['code_produit', 'libelle', 'prix_unitaire'])
+
+    while True:
+        code = input("Entrez le code produit (6 caractères alphanumériques) : ").strip()
+        if Valider_code_produit(code, produits_df):
+            break
+
+    # Saisir le libellé du produit
+    libelle = input("Entrez le Nom du produit : ").strip()
+    if not libelle:
+        print("Le nom du produit ne peut pas être vide.")
+        return
+
+    # Saisie et validation du prix unitaire
+    while True:
+        try:
+            prix_unitaire_str = input("Entrez le prix unitaire du produit : ").strip()
+            prix_unitaire = float(prix_unitaire_str)
+            if prix_unitaire <= 0:
+                print("Erreur : Le prix unitaire doit être un nombre positif.")
+            else:
+                break
+        except ValueError:
+            print("Erreur : Veuillez entrer un nombre valide pour le prix.")
+
+    # Ajout du produit
+    nouveau_produit = {
+        'code_produit': code,
+        'libelle': libelle,
+        'prix_unitaire': prix_unitaire
+    }
+
+    # Ajouter le nouveau produit au DataFrame
+    produits_df = produits_df.append(nouveau_produit, ignore_index=True)
+
+    # Sauvegarder dans le fichier Excel
+    try:
+        produits_df.to_excel('Produits.xlsx', index=False)
+        print("Produit ajouté avec succès.")
+    except Exception as e:
+        print(f"Erreur lors de la sauvegarde du produit : {e}")
+
+    # Afficher les produits mis à jour
+    afficher_produits(produits_df)
+
+    #Get produits par code
+
+def get_produit_par_code(code_produit, produits_df):
+    code = code_produit.strip().upper()
+
+    # Recherche du produit dans le DataFrame
+    produit = produits_df[produits_df["code_produit"] == code]
+
+    if not produit.empty:
+        return produit.iloc[0]  
+    else:
+        return None
+
