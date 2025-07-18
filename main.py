@@ -6,10 +6,10 @@ from modules import index
 
 from utils.effacer import effacer_console
 from utils.pdf import generer_facture_pdf
-
+from modules.consultation import afficher_clients, afficher_produits
 from modules.index import sous_menu_consultation
 from modules.client import ajouter_client, verifier_code_client
-from modules.produits_manager import ajouter_produit
+#from modules.produits_manager import ajouter_produit
 from modules.facture import generer_facture
 
 init(autoreset=True)
@@ -30,7 +30,7 @@ def menu():
 
         print(Fore.GREEN + "1." + Fore.WHITE + " Consulter un fichier")
         print(Fore.GREEN + "2." + Fore.WHITE + " Générer une facture")
-        print(Fore.GREEN + "3." + Fore.WHITE + " Ajouter une facture")
+        print(Fore.GREEN + "3." + Fore.WHITE + " Ajouter un produit")
         print(Fore.RED + "4." + Fore.WHITE + " Quitter l'application")
 
         choix = input(Fore.YELLOW + "\nQue voulez-vous faire ? " + Fore.WHITE)
@@ -42,16 +42,18 @@ def menu():
             time.sleep(2)
 
         elif choix == "2":
-            code_client = input(Fore.YELLOW + "Entrez le code du client : ").strip()
-            if not verifier_code_client(code_client):
-                print(Fore.RED + "Le code client est invalide ou inexistant.")
-                input(Fore.YELLOW + "\nAppuyez sur Entrée pour revenir au menu...")
-                continue
-
+            while True:
+                afficher_clients()
+                code_client = input(Fore.YELLOW + "Entrez le code du client : ").strip().upper()
+                if not verifier_code_client(code_client, "data/Clients.xlsx"):
+                    print(Fore.RED + "Le code client est invalide ou inexistant.")
+                    continue
+                break
             produits_commandes = []
 
             while True:
-                code_produit = input("Code du produit (ou 'q' pour terminer) : ").strip()
+                afficher_produits()
+                code_produit = input("Code du produit (ou 'q' pour terminer) : ").strip().upper()
                 if code_produit.lower() == 'q':
                     break
 

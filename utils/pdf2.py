@@ -1,7 +1,6 @@
 from fpdf import FPDF
 from datetime import datetime
 from num2words import num2words
-import os
 
 class FacturePDF(FPDF):
     def header(self):
@@ -27,9 +26,15 @@ class FacturePDF(FPDF):
         self.set_font("Arial", "I", 10)
         self.cell(0, 10, "Merci de votre confiance !", 0, 0, "C")
 
-def generer_facture_pdf(nom_client, facture_num, produits, total_ttc, fichier_pdf="facture.pdf"):
-    """Génère un fichier PDF pour la facture à partir des données fournies."""
-    # Convertir le montant en lettres
+#function pour generer une facture en pdf en recuperant les informations dans le fichiers de la facture
+def generer_facture_pdf(fichier_txt="facture.txt", fichier_pdf="facture.pdf"):
+    #lire le fichier  de la facture et recuperer les fichiers nom_client, facture_num, produits, total_ttc
+    with open(fichier_txt, "r") as f:
+        nom_client = f.readline()
+        facture_num = f.readline()
+        produits = eval(f.readline())
+        total_ttc = float(f.readline())
+    # convertir en lettres
     montant_en_lettres = num2words(total_ttc, lang="fr").capitalize() + " francs CFA"
 
     pdf = FacturePDF()
@@ -68,8 +73,18 @@ def generer_facture_pdf(nom_client, facture_num, produits, total_ttc, fichier_pd
     pdf.set_font("Arial", "", 11)
     pdf.multi_cell(0, 10, f"Arrêtée, la présente facture à la somme de : {montant_en_lettres}")
 
-    # Sauvegarder le PDF dans le dossier data
-    output_path = os.path.join("data", f"facture_{facture_num}.pdf")
-    pdf.output(output_path)
-    print(f"La facture a été générée avec succès : {output_path}")
-    return output_path
+    pdf.output(fichier_pdf)
+    print(f"La facture a été générée avec succès : {fichier_pdf}")
+
+
+#produits = [
+   # ("P001", "Clavier Azerty", 7500, 2, 15000),
+   # ("P005", "Souris optique", 3000, 1, 3000)
+#]
+
+#generer_facture_pdf(
+    #nom_client="KODJO FIRMINE",
+    #facture_num="000045",
+    #produits=produits,
+    #total_ttc=19116
+#)

@@ -3,3 +3,4 @@ openpyxl
 fpdf
 num2words
 colorama
+reportlab

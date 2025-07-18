@@ -67,18 +67,17 @@ def sous_menu_consultation():
             break
 
         elif choix == "3":
-            code_client = input(Fore.GREEN + "\nSaisir " + "le code du client a rechercher : ")
+            code_client = input(Fore.GREEN + "\nSaisir " + "le code du client à rechercher : ").strip().upper()
 
-            if verifier_code_client(code_client, "data/Clients.xlsx") :
-
+            if verifier_code_client(code_client, "data/Clients.xlsx"):
                 donnees = pd.DataFrame(trouver_client_par_code(code_client, "data/Clients.xlsx"))
                 print(Fore.CYAN + "\n===== Informations du client =====")
-                print(donnees[ donnees["code_client"] == code_client ] )
+                print(donnees)
                 input(Fore.CYAN + "\nAppuyez sur Entrée pour continuer...")
 
-            else :
+            else:
                 print(Fore.RED + "\nLe client avec le code " + code_client + " n'existe pas!")
-            time.sleep(2)
+                time.sleep(2)
             break
 
         elif choix == "4":
