@@ -68,7 +68,8 @@ def sous_menu_consultation():
 
         elif choix == "3":
             code_client = input(Fore.GREEN + "\nSaisir " + "le code du client à rechercher : ").strip().upper()
-
+            
+            if verifier_code_client(code_client, "data/Clients.xlsx") :
                 donnees = trouver_client_par_code(code_client, "data/Clients.xlsx")
                 print(Fore.CYAN + "\n===== Informations du client =====")
                 # print( donnees["code_client"] + " " + donnees["nom"] + donnees["contact"] + donnees["IFU"] )
