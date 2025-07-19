@@ -1,247 +1,181 @@
-from re import A
-import tkinter as tk
-from tkinter import ttk, messagebox
-import pandas as pd
-from modules.consultation_interface import afficher_clients, afficher_produits, afficher_cartes
-from modules.client_interface import ajouter_client, verifier_code_client
-from modules.facture_interface import generer_facture
+import tkinter
+import pandas
+import re
+from modules.client import ajouter_client, verifier_code_client, generer_code_client, donnees_sont_valides
+from modules.consultation import lire_fichier_excel
+from modules.facture import generer_facture
 from utils.pdf import generer_facture_pdf
-from modules.produits_manager_interface import ajouter_produit
 
-class FacturationApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("GestionApp")
-        self.root.geometry("800x600")
-        self.create_main_menu()
+fenetre = tkinter.Tk()
+fenetre.title("FACTURE APP")
+fenetre.geometry("700x500")
+fenetre.configure(bg="black")
 
-    def create_main_menu(self):
-        """Crée le menu principal avec les options."""
-        self.clear_window()
+menu = tkinter.Frame(fenetre, bg="black")
+menu.pack(side="left")
 
-        tk.Label(self.root, text="GestionApp", font=("Arial", 20, "bold"), fg="cyan").pack(pady=20)
+droite = tkinter.Frame(fenetre, bg="black")
+droite.pack(side="right")
 
-        tk.Button(self.root, text="Consulter un fichier", font=("Arial", 14), command=self.consultation_menu, bg="green", fg="white").pack(pady=10)
-        tk.Button(self.root, text="Générer une facture", font=("Arial", 14), command=self.facture_menu, bg="green", fg="white").pack(pady=10)
-        tk.Button(self.root, text="Ajouter un produit", font=("Arial", 14), command=self.ajouter_produit_menu, bg="green", fg="white").pack(pady=10)
-        tk.Button(self.root, text="Ajouter un client", font=("Arial", 14), command=self.ajouter_client_menu, bg="green", fg="white").pack(pady=10)
-        tk.Button(self.root, text="Quitter", font=("Arial", 14), command=self.root.quit, bg="red", fg="white").pack(pady=10)
+produits_liste = []
 
-    def clear_window(self):
-        """Efface le contenu de la fenêtre."""
-        for widget in self.root.winfo_children():
-            widget.destroy()
+def effacer_droite():
+    for truc in droite.winfo_children():
+        truc.destroy()
 
-    def consultation_menu(self):
-        """Menu pour consulter les fichiers."""
-        self.clear_window()
+def montrer_clients():
+    effacer_droite()
+    donnees = lire_fichier_excel('Clients.xlsx')
+    texte = ""
+    if donnees is not None:
+        texte = "CLIENTS\n-----\n"
+        for i in donnees.index:
+            texte += str(donnees.iloc[i]["code_client"]) + "  "
+            texte += str(donnees.iloc[i]["nom"]) + "  "
+            texte += str(donnees.iloc[i]["contact"]) + "  "
+            texte += str(donnees.iloc[i]["IFU"]) + "\n"
+    else:
+        texte = "PAS D CLIENTS"
+    label = tkinter.Label(droite, text=texte, fg="white", bg="black")
+    label.pack()
 
-        tk.Label(self.root, text="MENU CONSULTATION", font=("Arial", 18, "bold"), fg="cyan").pack(pady=20)
+def montrer_produits():
+    effacer_droite()
+    donnees = lire_fichier_excel('Produits.xlsx')
+    texte = ""
+    if donnees is not None:
+        texte = "PRODUITS\n-----\n"
+        for i in donnees.index:
+            texte += str(donnees.iloc[i]["code_produit"]) + "  "
+            texte += str(donnees.iloc[i]["libelle"]) + "  "
+            texte += str(donnees.iloc[i]["prix_unitaire"]) + "\n"
+    else:
+        texte = "PAS DE PRODUITS"
+    label = tkinter.Label(droite, text=texte, fg="white", bg="black")
+    label.pack()
 
-        tk.Button(self.root, text="Afficher les clients", font=("Arial", 12), command=self.show_clients, bg="blue", fg="white").pack(pady=5)
-        tk.Button(self.root, text="Afficher les produits", font=("Arial", 12), command=self.show_produits, bg="blue", fg="white").pack(pady=5)
-        tk.Button(self.root, text="Afficher les cartes", font=("Arial", 12), command=self.show_cartes, bg="blue", fg="white").pack(pady=5)
-        tk.Button(self.root, text="Retour", font=("Arial", 12), command=self.create_main_menu, bg="red", fg="white").pack(pady=5)
+def ajout_client():
+    effacer_droite()
+    label1 = tkinter.Label(droite, text="NOM", fg="white", bg="black")
+    label1.pack()
+    nom = tkinter.Entry(droite, fg="white", bg="black")
+    nom.pack()
 
-    def show_table(self, df, title):
-        """Affiche un DataFrame dans un tableau."""
-        self.clear_window()
-        tk.Label(self.root, text=title, font=("Arial", 16, "bold"), fg="cyan").pack(pady=10)
+    label2 = tkinter.Label(droite, text="CONTACTS", fg="white", bg="black")
+    label2.pack(pady=10)
+    contact = tkinter.Entry(droite, fg="white", bg="black")
+    contact.pack()
 
-        tree = ttk.Treeview(self.root)
-        tree["columns"] = list(df.columns)
-        tree["show"] = "headings"
+    label3 = tkinter.Label(droite, text="IFU", fg="white", bg="black")
+    label3.pack(pady=10)
+    ifu = tkinter.Entry(droite, fg="white", bg="black")
+    ifu.pack()
 
-        for col in df.columns:
-            tree.heading(col, text=col)
-            tree.column(col, width=150)
-
-        for _, row in df.iterrows():
-            tree.insert("", "end", values=list(row))
-
-        tree.pack(fill="both", expand=True, padx=10, pady=10)
-        tk.Button(self.root, text="Retour", command=self.consultation_menu, bg="red", fg="white").pack(pady=10)
-
-
-    def show_clients_list(self):
-        """Affiche la liste des clients."""
-        df = afficher_clients()
-        self.show_clients_list(df, "Liste des Clients")
-        tree["columns"] = list(df.columns)
-        tree["show"] = "headings"
-
-        for col in df.columns:
-            tree.heading(col, text=col)
-            tree.column(col, width=150)
-
-        for _, row in df.iterrows():
-            tree.insert("", "end", values=list(row))
-
-        tree.pack(fill="both", expand=True, padx=10, pady=10)
-
-
-
-    def show_clients(self):
-        """Affiche la liste des clients."""
-        df = afficher_clients()
-        if df.empty:
-            messagebox.showerror("Erreur", "Aucun client trouvé ou fichier introuvable.")
-            self.consultation_menu()
+    def valider():
+        n = nom.get()
+        c = contact.get()
+        i = ifu.get()
+        if not n:
+            label = tkinter.Label(droite, text="NOM VIDE", fg="white", bg="black")
+            label.pack()
+            return
+        if not c.isdigit():
+            label = tkinter.Label(droite, text="CONTACT PAS BON", fg="white", bg="black")
+            label.pack()
+            return
+        if i and len(i) != 13:
+            label = tkinter.Label(droite, text="IFU PAS 13", fg="white", bg="black")
+            label.pack()
+            return
+        code = generer_code_client("data/Clients.xlsx")
+        donnees = {"code_client": code, "nom": n, "contact": c, "IFU": i if i else None}
+        if donnees_sont_valides(donnees):
+            ajouter_client(donnees, "data/Clients.xlsx")
+            label = tkinter.Label(droite, text="CLIENT OK", fg="white", bg="black")
+            label.pack()
         else:
-            self.show_table(df, "Liste des Clients")
+            label = tkinter.Label(droite, text="ERREUR", fg="white", bg="black")
+            label.pack()
 
-    def show_produits(self):
-        """Affiche la liste des produits."""
-        df = afficher_produits()
-        if df.empty:
-            messagebox.showerror("Erreur", "Aucun produit trouvé ou fichier introuvable.")
-            self.consultation_menu()
+    bouton = tkinter.Button(droite, text="VALIDER", fg="white", bg="black", command=valider)
+    bouton.pack(pady=5)
+
+def faire_facture():
+    effacer_droite()
+    label1 = tkinter.Label(droite, text="CODE CLIENT", fg="white", bg="black")
+    label1.pack()
+    code_client = tkinter.Entry(droite, fg="white", bg="black")
+    code_client.pack()
+
+    label2 = tkinter.Label(droite, text="PREMIERE FACTURE? OUI/NON", fg="white", bg="black")
+    label2.pack(pady=10)
+    premiere = tkinter.Entry(droite, fg="white", bg="black")
+    premiere.pack()
+
+    def ajout_produit():
+        effacer_droite()
+        label3 = tkinter.Label(droite, text="CODE PRODUIT", fg="white", bg="black")
+        label3.pack()
+        code_prod = tkinter.Entry(droite, fg="white", bg="black")
+        code_prod.pack()
+
+        label4 = tkinter.Label(droite, text="QUANTITEES", fg="white", bg="black")
+        label4.pack(pady=10)
+        quantite = tkinter.Entry(droite, fg="white", bg="black")
+        quantite.pack()
+
+        def valider_produit():
+            cp = code_prod.get()
+            q = quantite.get()
+            if q.isdigit():
+                produits_liste.append({"code_produit": cp, "quantite": int(q)})
+                label = tkinter.Label(droite, text="PRODUIT OK", fg="white", bg="black")
+                label.pack()
+                faire_facture()
+            else:
+                label = tkinter.Label(droite, text="QUANTITEE PAS BON", fg="white", bg="black")
+                label.pack()
+
+        bouton = tkinter.Button(droite, text="OK", fg="white", bg="black", command=valider_produit)
+        bouton.pack(pady=5)
+        bouton2 = tkinter.Button(droite, text="RETOUR", fg="white", bg="black", command=faire_facture)
+        bouton2.pack()
+
+    def valider_facture():
+        c = code_client.get()
+        p = premiere.get().lower() == "oui"
+        if not verifier_code_client(c, "data/Clients.xlsx"):
+            label = tkinter.Label(droite, text="CLIENT PAS BON", fg="white", bg="black")
+            label.pack()
+            return
+        if not produits_liste:
+            label = tkinter.Label(droite, text="PAS DE PRODUIT", fg="white", bg="black")
+            label.pack()
+            return
+        prods = {item["code_produit"]: item["quantite"] for item in produits_liste}
+        facture = generer_facture(c, prods, p)
+        if facture:
+            generer_facture_pdf(facture["nom_client"], facture["numero_facture"], facture["produits"], facture["total_ttc"])
+            label = tkinter.Label(droite, text="FACTURE OK " + facture["numero_facture"], fg="white", bg="black")
+            label.pack()
         else:
-            self.show_table(df, "Liste des Produits")
+            label = tkinter.Label(droite, text="ERREUR FACTURE", fg="white", bg="black")
+            label.pack()
 
-    def show_cartes(self):
-        """Affiche la liste des cartes de fidélité."""
-        df = afficher_cartes()
-        if df.empty:
-            messagebox.showerror("Erreur", "Aucune carte trouvée ou fichier introuvable.")
-            self.consultation_menu()
-        else:
-            self.show_table(df, "Liste des Cartes de Fidélité")
+    bouton = tkinter.Button(droite, text="AJOUTER PRODUIT", fg="white", bg="black", command=ajout_produit)
+    bouton.pack(pady=5)
+    bouton2 = tkinter.Button(droite, text="FAIRE FACTURE", fg="white", bg="black", command=valider_facture)
+    bouton2.pack()
 
-    def facture_menu(self):
-        """Menu pour générer une facture."""
-        self.clear_window()
-        tk.Label(self.root, text="GÉNÉRER UNE FACTURE", font=("Arial", 18, "bold"), fg="cyan").pack(pady=20)
-        self.show_clients_list()
-        tk.Label(self.root, text="Code client:", font=("Arial", 12)).pack()
-        code_client_entry = tk.Entry(self.root, font=("Arial", 12))
-        code_client_entry.pack(pady=5)
+bouton1 = tkinter.Button(menu, text="CLIENTS", fg="white", bg="black", command=montrer_clients)
+bouton1.pack()
+bouton2 = tkinter.Button(menu, text="PRODUITS", fg="white", bg="black", command=montrer_produits)
+bouton2.pack(pady=3)
+bouton3 = tkinter.Button(menu, text="AJOUTER CLIENT", fg="white", bg="black", command=ajout_client)
+bouton3.pack()
+bouton4 = tkinter.Button(menu, text="FACTURE", fg="white", bg="black", command=faire_facture)
+bouton4.pack(pady=7)
+bouton5 = tkinter.Button(menu, text="QUITTER", fg="white", bg="black", command=fenetre.quit)
+bouton5.pack()
 
-        tk.Label(self.root, text="Produits:", font=("Arial", 12)).pack()
-        produits_frame = tk.Frame(self.root)
-        produits_frame.pack(fill="both", expand=True)   
-
-        produits_commandes = []
-        produits_df = pd.read_excel("data/Produits.xlsx")
-        produit_var = tk.StringVar(self.root)
-        quantite_entry = tk.Entry(produits_frame, font=("Arial", 12), width=10)
-
-        def add_produit():
-            
-            code_produit = produit_var.get()
-            quantite = quantite_entry.get()
-            if not quantite.isdigit():
-                messagebox.showerror("Erreur", "Quantité invalide. Entrez un nombre entier positif.")
-                return
-            produits_commandes.append({"code_produit": code_produit, "quantite": int(quantite)})
-            quantite_entry.delete(0, tk.END)
-            messagebox.showinfo("Succès", f"Produit {code_produit} ajouté avec quantité {quantite}.")
-
-        ttk.Combobox(produits_frame, textvariable=produit_var, values=list(produits_df["code_produit"])).pack(side="left", padx=5)
-        quantite_entry.pack(side="left", padx=5)
-        tk.Button(produits_frame, text="Ajouter produit", command=add_produit, bg="green", fg="white").pack(side="left", padx=5)
-
-        def generate_facture():
-            code_client = code_client_entry.get().strip().upper()
-            if not verifier_code_client(code_client, "data/Clients.xlsx"):
-                messagebox.showerror("Erreur", "Code client invalide ou inexistant.")
-                return
-            if not produits_commandes:
-                messagebox.showerror("Erreur", "Aucun produit sélectionné.")
-                return
-
-            facture_data = generer_facture(code_client, produits_commandes)
-            if not facture_data:
-                messagebox.showerror("Erreur", "Erreur lors de la génération de la facture. Vérifiez les données du client ou des produits.")
-                return
-
-            try:
-                pdf_path = generer_facture_pdf(
-                    nom_client=facture_data["nom_client"],
-                    facture_num=facture_data["numero_facture"],
-                    produits=facture_data["produits"],
-                    total_ttc=facture_data["total_ttc"]
-                )
-                messagebox.showinfo("Succès", f"Facture générée avec succès : {pdf_path}")
-                self.create_main_menu()
-            except Exception as e:
-                messagebox.showerror("Erreur", f"Erreur lors de la génération du PDF : {e}")
-
-        tk.Button(self.root, text="Générer la facture", command=generate_facture, bg="green", fg="white").pack(pady=10)
-        tk.Button(self.root, text="Retour", command=self.create_main_menu, bg="red", fg="white").pack(pady=10)
-
-    def ajouter_produit_menu(self):
-        """Menu pour ajouter un produit."""
-        self.clear_window()
-        tk.Label(self.root, text="AJOUTER UN PRODUIT", font=("Arial", 18, "bold"), fg="cyan").pack(pady=20)
-
-        tk.Label(self.root, text="Code produit:", font=("Arial", 12)).pack()
-        code_entry = tk.Entry(self.root, font=("Arial", 12))
-        code_entry.pack(pady=5)
-
-        tk.Label(self.root, text="Libellé:", font=("Arial", 12)).pack()
-        libelle_entry = tk.Entry(self.root, font=("Arial", 12))
-        libelle_entry.pack(pady=5)
-
-        tk.Label(self.root, text="Prix unitaire:", font=("Arial", 12)).pack()
-        prix_entry = tk.Entry(self.root, font=("Arial", 12))
-        prix_entry.pack(pady=5)
-
-        def save_produit():
-            try:
-                produit = {
-                    "code_produit": code_entry.get().strip().upper(),
-                    "libelle": libelle_entry.get().strip(),
-                    "prix_unitaire": float(prix_entry.get().strip())
-                }
-                ajouter_produit(produit)
-                messagebox.showinfo("Succès", "Produit ajouté avec succès!")
-                self.create_main_menu()
-            except Exception as e:
-                messagebox.showerror("Erreur", f"Erreur lors de l'ajout du produit : {e}")
-
-        tk.Button(self.root, text="Ajouter", command=save_produit, bg="green", fg="white").pack(pady=10)
-        tk.Button(self.root, text="Retour", command=self.create_main_menu, bg="red", fg="white").pack(pady=10)
-
-    def ajouter_client_menu(self):
-        """Menu pour ajouter un client."""
-        self.clear_window()
-        tk.Label(self.root, text="AJOUTER UN CLIENT", font=("Arial", 18, "bold"), fg="cyan").pack(pady=20)
-
-        tk.Label(self.root, text="Code client (ex. A123):", font=("Arial", 12)).pack()
-        code_entry = tk.Entry(self.root, font=("Arial", 12))
-        code_entry.pack(pady=5)
-
-        tk.Label(self.root, text="Nom:", font=("Arial", 12)).pack()
-        nom_entry = tk.Entry(self.root, font=("Arial", 12))
-        nom_entry.pack(pady=5)
-
-        tk.Label(self.root, text="Contact (numérique):", font=("Arial", 12)).pack()
-        contact_entry = tk.Entry(self.root, font=("Arial", 12))
-        contact_entry.pack(pady=5)
-
-        tk.Label(self.root, text="IFU (13 chiffres):", font=("Arial", 12)).pack()
-        ifu_entry = tk.Entry(self.root, font=("Arial", 12))
-        ifu_entry.pack(pady=5)
-
-        def save_client():
-            try:
-                client = {
-                    "code_client": code_entry.get().strip().upper(),
-                    "nom": nom_entry.get().strip(),
-                    "contact": contact_entry.get().strip(),
-                    "IFU": ifu_entry.get().strip()
-                }
-                ajouter_client(client, "data/Clients.xlsx")
-                messagebox.showinfo("Succès", "Client ajouté avec succès!")
-                self.create_main_menu()
-            except Exception as e:
-                messagebox.showerror("Erreur", f"Erreur lors de l'ajout du client : {e}")
-
-        tk.Button(self.root, text="Ajouter", command=save_client, bg="green", fg="white").pack(pady=10)
-        tk.Button(self.root, text="Retour", command=self.create_main_menu, bg="red", fg="white").pack(pady=10)
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = FacturationApp(root)
-    root.mainloop()
+fenetre.mainloop()
