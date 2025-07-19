@@ -1,13 +1,13 @@
 
 import pandas as pd
 import os
-from data_manager import (
-    lire_fichier_excel,
-    DATA_PATH,
-    afficher_produits,
-    Fore,
-    Style
-)
+# from data_manager import (
+#     lire_fichier_excel,
+#     DATA_PATH,
+#     afficher_produits,
+#     Fore,
+#     Style
+# )
 
 def valider_code_produit(code):
     """Valide le format du code produit (6 caractères alphanumériques)"""

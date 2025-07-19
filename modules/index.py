@@ -71,11 +71,12 @@ def sous_menu_consultation():
 
             if verifier_code_client(code_client, "data/Clients.xlsx") :
 
-                donnees = pd.DataFrame(trouver_client_par_code(code_client, "data/Clients.xlsx"))
+                donnees = trouver_client_par_code(code_client, "data/Clients.xlsx")
                 print(Fore.CYAN + "\n===== Informations du client =====")
-                print(donnees[ donnees["code_client"] == code_client ] )
+                # print( donnees["code_client"] + " " + donnees["nom"] + donnees["contact"] + donnees["IFU"] )
+                print(donnees)
                 input(Fore.CYAN + "\nAppuyez sur Entrée pour continuer...")
-
+ 
             else :
                 print(Fore.RED + "\nLe client avec le code " + code_client + " n'existe pas!")
             time.sleep(2)

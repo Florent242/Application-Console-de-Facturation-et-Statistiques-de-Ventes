@@ -8,7 +8,7 @@ def ajouter_client(donnees, src) :
 
 def trouver_client_par_code(code, src) :
     df = pd.read_excel(src)
-    return [ df["code_client"] == code ]
+    return df[ df["code_client"] == code ]
 
 import pandas as pd
 
