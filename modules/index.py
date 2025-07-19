@@ -67,9 +67,7 @@ def sous_menu_consultation():
             break
 
         elif choix == "3":
-            code_client = input(Fore.GREEN + "\nSaisir " + "le code du client a rechercher : ")
-
-            if verifier_code_client(code_client, "data/Clients.xlsx") :
+            code_client = input(Fore.GREEN + "\nSaisir " + "le code du client à rechercher : ").strip().upper()
 
                 donnees = trouver_client_par_code(code_client, "data/Clients.xlsx")
                 print(Fore.CYAN + "\n===== Informations du client =====")
@@ -79,7 +77,7 @@ def sous_menu_consultation():
  
             else :
                 print(Fore.RED + "\nLe client avec le code " + code_client + " n'existe pas!")
-            time.sleep(2)
+                time.sleep(2)
             break
 
         elif choix == "4":

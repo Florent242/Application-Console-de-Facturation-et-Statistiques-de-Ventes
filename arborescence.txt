@@ -1,13 +1,17 @@
 .
 |-- data
+|  |-- CartesReduction.xlsx
 |  |-- Clients.xlsx
 |  |-- Liste entreprises JobFair ESGIS 2025.pdf
 |  |-- Produits.xlsx
 |-- modules
 |  |-- __pycache__
 |  |  |-- ajout_produit.cpython-313.pyc
+|  |  |-- client.cpython-313.pyc
 |  |  |-- consultation.cpython-312.pyc
 |  |  |-- consultation.cpython-313.pyc
+|  |  |-- facture.cpython-313.pyc
+|  |  |-- generate_facture.cpython-313.pyc
 |  |  |-- index.cpython-313.pyc
 |  |  |-- produit.cpython-313.pyc
 |  |  |-- produits_manager.cpython-313.pyc
@@ -16,7 +20,7 @@
 |  |-- facture.py
 |  |-- generate_facture.py
 |  |-- index.py
-|  |-- produit.py
+|  |-- produits_manager.py
 |-- utils
 |  |-- __pycache__
 |  |  |-- effacer.cpython-313.pyc
@@ -25,11 +29,13 @@
 |  |-- pdf.py
 |-- __pycache__
 |  |-- facture.cpython-312.pyc
+|  |-- index.cpython-312.pyc
 |  |-- test.cpython-313.pyc
 |-- arbo.ps1
 |-- arborescence.txt
 |-- dependances.txt
 |-- facture.pdf
+|-- interface.py
 |-- LICENSE
 |-- main.py
 |-- README.md
