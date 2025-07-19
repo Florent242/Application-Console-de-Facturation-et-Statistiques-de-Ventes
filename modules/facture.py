@@ -107,7 +107,17 @@ def generer_facture(code_client, produits_commandes, is_premiere_facture=False):
     else:
         numero_facture = f"F{len(factures_df) + 1:04d}"
 
-    nouvelle_facture = pd.DataFrame([{ "numero_facture": numero_facture }])
+    nouvelle_facture = pd.DataFrame([{
+        "numero_facture": numero_facture,
+        "code_client": code_client,
+        "nom_client": client["nom"].iloc[0],
+        "date": datetime.now().strftime("%d/%m/%Y"),
+        "total_ht": round(total_ht, 2),
+        "remise_fcfa": round(total_remise, 2),
+        "taux_remise": taux_remise,
+        "tva": round(total_tva, 2),
+        "total_ttc": round(total_ttc, 2)
+    }])
     factures_df = pd.concat([factures_df, nouvelle_facture], ignore_index=True)
     factures_df.to_excel("data/Factures.xlsx", index=False)
 

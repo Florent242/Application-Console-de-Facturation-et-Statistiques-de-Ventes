@@ -65,7 +65,6 @@ def menu():
                             break
                         print(Fore.RED + "Erreur : l'IFU doit avoir 13 chiffres.")
 
-                    # Génération du code client
                     code_client = generer_code_client("data/Clients.xlsx")
                     if not code_client:
                         print(Fore.RED + "Erreur : impossible de générer un code client.")
